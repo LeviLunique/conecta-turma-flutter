@@ -70,6 +70,7 @@ class ConectaTurmaApp extends StatelessWidget {
         ),
         initialRoute: AppRoutes.home,
         onGenerateRoute: (settings) {
+          final categoryArgument = settings.arguments;
           return switch (settings.name) {
             AppRoutes.home => MaterialPageRoute<void>(
               settings: settings,
@@ -78,7 +79,9 @@ class ConectaTurmaApp extends StatelessWidget {
             AppRoutes.round => MaterialPageRoute<void>(
               settings: settings,
               builder: (_) => RoundScreen(
-                categoryId: settings.arguments as String? ?? 'leves',
+                categoryId: categoryArgument is String
+                    ? categoryArgument
+                    : 'leves',
               ),
             ),
             AppRoutes.favorites => MaterialPageRoute<void>(

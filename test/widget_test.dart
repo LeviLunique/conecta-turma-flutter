@@ -37,4 +37,32 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byTooltip('Remover dos favoritos'), findsOneWidget);
   });
+
+  testWidgets('rota desconhecida retorna ao início', (tester) async {
+    await tester.pumpWidget(ConectaTurmaApp(store: await createStore()));
+    Navigator.of(
+      tester.element(find.text('Conecta Turma')),
+    ).pushNamed('/rota-inexistente');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Escolha o clima da conversa'), findsNWidgets(2));
+  });
+
+  testWidgets('concluir a rodada registra cinco respostas', (tester) async {
+    final store = await createStore();
+    await tester.pumpWidget(ConectaTurmaApp(store: store));
+    await tester.ensureVisible(find.text('Comece leve'));
+    await tester.tap(find.text('Comece leve'));
+    await tester.pumpAndSettle();
+
+    for (var index = 0; index < 5; index++) {
+      await tester.tap(
+        find.text(index == 4 ? 'Concluir rodada' : 'Respondemos! Próxima'),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    expect(store.answeredCount, 5);
+    expect(find.text('Rodada concluída!'), findsOneWidget);
+  });
 }

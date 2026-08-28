@@ -3,9 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ActivityStore extends ChangeNotifier {
   ActivityStore(this._preferences)
-    : _favoriteIds = (_preferences.getStringList(_favoritesKey) ?? <String>[])
-          .toSet(),
-      _answeredCount = _preferences.getInt(_answeredKey) ?? 0;
+    : _favoriteIds = _loadFavoriteIds(_preferences),
+      _answeredCount = _loadAnsweredCount(_preferences);
 
   static const _favoritesKey = 'favorite_prompt_ids';
   static const _answeredKey = 'answered_prompt_count';
@@ -14,7 +13,7 @@ class ActivityStore extends ChangeNotifier {
   final Set<String> _favoriteIds;
   int _answeredCount;
 
-  Set<String> get favoriteIds => Set.unmodifiable(_favoriteIds);
+  Set<String> get favoriteIds => Set.unmodifiable(_sortedFavoriteIds());
   int get answeredCount => _answeredCount;
 
   bool isFavorite(String promptId) => _favoriteIds.contains(promptId);
@@ -25,7 +24,7 @@ class ActivityStore extends ChangeNotifier {
     }
     await _preferences.setStringList(
       _favoritesKey,
-      _favoriteIds.toList(growable: false)..sort(),
+      _sortedFavoriteIds(),
     );
     notifyListeners();
   }
@@ -34,6 +33,26 @@ class ActivityStore extends ChangeNotifier {
     _answeredCount += 1;
     await _preferences.setInt(_answeredKey, _answeredCount);
     notifyListeners();
+  }
+
+  static Set<String> _loadFavoriteIds(SharedPreferences preferences) {
+    final ids = preferences
+        .getStringList(_favoritesKey)
+        ?.where((id) => id.isNotEmpty)
+        .toSet()
+        .toList(growable: true);
+    ids?.sort();
+    return ids == null ? <String>{} : ids.toSet();
+  }
+
+  static int _loadAnsweredCount(SharedPreferences preferences) {
+    final count = preferences.getInt(_answeredKey) ?? 0;
+    return count < 0 ? 0 : count;
+  }
+
+  List<String> _sortedFavoriteIds() {
+    final ids = _favoriteIds.toList(growable: true)..sort();
+    return ids;
   }
 }
 

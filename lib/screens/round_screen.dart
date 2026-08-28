@@ -17,6 +17,7 @@ class RoundScreen extends StatefulWidget {
 class _RoundScreenState extends State<RoundScreen> {
   int _index = 0;
   int _roundAnswers = 0;
+  bool _isSubmitting = false;
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +75,9 @@ class _RoundScreenState extends State<RoundScreen> {
               ),
               const SizedBox(height: 18),
               FilledButton.icon(
-                onPressed: () => _answer(prompts.length, store),
+                onPressed: _isSubmitting
+                    ? null
+                    : () => _answer(prompts.length, store),
                 icon: const Icon(Icons.check_rounded),
                 label: Text(
                   _index == prompts.length - 1
@@ -104,6 +107,8 @@ class _RoundScreenState extends State<RoundScreen> {
   }
 
   Future<void> _answer(int promptCount, ActivityStore store) async {
+    if (_isSubmitting) return;
+    setState(() => _isSubmitting = true);
     await store.recordAnswer();
     if (!mounted) return;
     _roundAnswers += 1;
@@ -131,10 +136,17 @@ class _RoundScreenState extends State<RoundScreen> {
           ],
         ),
       );
-      if (mounted) setState(() => _index = 0);
+      if (mounted) {
+        setState(() {
+          _index = 0;
+          _roundAnswers = 0;
+          _isSubmitting = false;
+        });
+      }
       return;
     }
     _next(promptCount);
+    if (mounted) setState(() => _isSubmitting = false);
   }
 
   void _next(int promptCount) {
