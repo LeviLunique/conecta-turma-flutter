@@ -45,7 +45,7 @@ void main() {
     ).pushNamed('/rota-inexistente');
     await tester.pumpAndSettle();
 
-    expect(find.text('Escolha o clima da conversa'), findsNWidgets(2));
+    expect(find.text('Escolha o clima da conversa'), findsOneWidget);
   });
 
   testWidgets('concluir a rodada registra cinco respostas', (tester) async {
@@ -56,8 +56,12 @@ void main() {
     await tester.pumpAndSettle();
 
     for (var index = 0; index < 5; index++) {
+      final button = find.text(
+        index == 4 ? 'Concluir rodada' : 'Respondemos! Próxima',
+      );
+      await tester.ensureVisible(button);
       await tester.tap(
-        find.text(index == 4 ? 'Concluir rodada' : 'Respondemos! Próxima'),
+        button,
       );
       await tester.pumpAndSettle();
     }
